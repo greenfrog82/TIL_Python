@@ -2,9 +2,10 @@
 
 Python3와 Django 2.x에서 데이터베이스를 다루는 방법들에 대해서 정리한다.
 
-## Model
+## [Models](https://docs.djangoproject.com/en/2.1/topics/db/models/#proxy-models)
 
 * [DateTimeField](./datetimefield.md)
+* [Proxy](./proxy.md)
 
 ## QuerySet
 
