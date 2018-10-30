@@ -58,6 +58,8 @@ auth_permission             django_session
 'B'
 ```
 
+예를들어, 
+
 그럼 `Proxy 모델`에 필드를 추가하면 어떻게 될까?   
 다음과 같이 `MyPerson`에 `age` 필드를 추가해보자. 
 
