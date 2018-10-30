@@ -34,6 +34,8 @@ class MyPerson(Person):
     class Meta:
         proxy = True
 
-    # def do_something(self):
-    #     # ...
-    #     pass
+
+class OrderedPerson(Person):
+    class Meta:
+        ordering = ['-last_name']
+        proxy = True
