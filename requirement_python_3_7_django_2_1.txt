@@ -1,7 +1,10 @@
+amqp==2.3.2
 appnope==0.1.0
 backcall==0.1.0
+billiard==3.5.0.4
 blessings==1.7
 bpython==0.17.1
+celery==4.2.1
 certifi==2018.10.15
 chardet==3.0.4
 curtsies==0.3.0
@@ -13,6 +16,7 @@ idna==2.7
 ipython==7.0.1
 ipython-genutils==0.2.0
 jedi==0.13.1
+kombu==4.2.1
 parso==0.3.1
 pexpect==4.6.0
 pickleshare==0.7.5
@@ -26,4 +30,5 @@ six==1.11.0
 traitlets==4.3.2
 typing==3.6.6
 urllib3==1.24
+vine==1.1.4
 wcwidth==0.1.7
