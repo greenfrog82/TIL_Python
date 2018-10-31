@@ -58,7 +58,31 @@ auth_permission             django_session
 'B'
 ```
 
-예를들어, 
+예를들어, 조회를 할 때 `last_name`을 통해 내림차순으로 정렬되는 전용 모델을 만들고 싶은 경우 역시 `Proxy 모델`을 사용할 수 있다.  
+다음과 같이 `Proxy 모델`을 정의해보자.  
+
+```python
+class OrderedPerson(Person):
+    class Meta:
+        ordering = ['-last_name']
+        proxy = True
+```
+
+위 모델을 통해 다시 데이터를 생성한 후 `Person`모델을 통해 조회를 해보고 `OrderedPerson`모델을 통해 조회를해보자.  
+`Person`모델은 오름차순으로 정렬을하고, `OrderedPerson`모델은 내림차순으로 정렬이 되는것을 알 수 있다. 
+
+```python
+>>> Person.objects.all()
+<QuerySet []>
+>>> Person.objects.create(first_name='a', last_name='A')
+<Person: Person object (1)>
+>>> Person.objects.create(first_name='b', last_name='B')
+<Person: Person object (2)>
+>>> Person.objects.all()
+<QuerySet [<Person: Person object (1)>, <Person: Person object (2)>]>
+>>> OrderedPerson.objects.all()
+<QuerySet [<OrderedPerson: OrderedPerson object (2)>, <OrderedPerson: OrderedPerson object (1)>]>
+```
 
 그럼 `Proxy 모델`에 필드를 추가하면 어떻게 될까?   
 다음과 같이 `MyPerson`에 `age` 필드를 추가해보자. 
