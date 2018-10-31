@@ -1,0 +1,17 @@
+.vscode
+__pycache__
+
+# pycharm
+.idea
+
+# vim
+*.swo
+*.swp
+
+.DS_Store
+
+# python
+*.pyc
+
+# etc
+*.lock
