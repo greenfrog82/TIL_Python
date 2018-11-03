@@ -1,6 +1,10 @@
-# About Django Models, DataBase, Transaction and QuerySet
+# How To
 
-Python3와 Django 2.x에서 데이터베이스를 다루는 방법들에 대해서 정리한다.
+Django 2.x를 다루는 방법에 대해서 정리한다. 
+
+## [Using the Django authentication system](https://docs.djangoproject.com/en/2.1/topics/auth/default/)
+
+* [User](./user.md)
 
 ## [Models](https://docs.djangoproject.com/en/2.1/topics/db/models/#proxy-models)
 
