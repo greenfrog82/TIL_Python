@@ -18,6 +18,11 @@ view를 개발할 때, FBV 또는 CBV중 어떤 것을 선택해야하는지 늘
 * 가독성
 * 재사용성
 
+[Dissussions] 
+
+* 하나의 Resource에 대해서 CRUD가 있다면, CBV로 개발하고 그렇지 않고 특정 Resource에 대해서 CRUD 중 하나만 한다면 FBV로 개발하는것이 편리하겠다. 
+* FBV로 개발해보고 CBV로 접근하는 방법도 있다.
+
 ## 8.2 Keep View Logic Out of URLConfs
 
 클라이언트의 요청은 `URLConfs`를 통해 view로 라우팅 된다. 이러한 `URLConfs`를 `urls.py`모듈에 정의한다.   
@@ -57,3 +62,4 @@ Example 8.1 참조
 내 생각에 공통 코드에 파라미터를 달리해서 처리할 수 있는 view가 있다고 하면 이렇게 쓰는것도 괜찮아 보이는데?
 책에 나오는 단점들도 잘 이해 안됨. 
 
+* 대부분의 개발자들은 책에서와 같이 둘을 분리해놓는것이 좋겠다. 
