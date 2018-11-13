@@ -122,7 +122,7 @@ Out[55]:
 ...
 ```
 
-`reverse`도 역시 사용 가능하다. 
+`reversed`도 역시 사용 가능하다. 
 
 ```python
 In [57]: for card in reversed(deck):
@@ -130,10 +130,6 @@ In [57]: for card in reversed(deck):
 Card(rank='A', suit='hearts')
 Card(rank='K', suit='hearts')
 ```
-
-## CHECK
-
-* 그런데 special method의 사용은 다른 언어들도 마찬가지 아닌가? 단지 조금 더 사용이 편리한거? 그리고 Duck Typing의 장점을 이용한거 정도?
 
 `iteration`은 종종 암묵적이다. 만약 `__contains__` 메소드가 정의되어 있지 않다면, `in` operator는 **sequential scan**을 수행한다.  
 
