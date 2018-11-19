@@ -137,3 +137,32 @@ Card(rank='K', suit='hearts')
 In [60]: Card('Q', 'hearts') in deck
 Out[60]: True
 ```
+
+정렬을 해보자. 일반적인 랭킹 카드 시스템은 내림차순으로 정렬된다. 스페이드가 가장 높고, 그 다음은 하트, 다이아몬드 마지막으로 클럽 순이다. 
+다음은 같은 랭키의 카드들을 내림차순으로 정렬한다.  
+
+```python
+suit_values = dict(spades=3, hearts=2, diamonds=1, clubs=0)
+
+def spades_high(card):
+    rank_value = FrenchDeck.ranks.index(card.rank)
+    return rank_value * len(suit_values) + suit_values[card.suit]
+
+for card in deck:
+    print(card)
+
+Card(rank='2', suit='clubs')
+Card(rank='2', suit='diamonds')
+Card(rank='2', suit='hearts')
+Card(rank='2', suit='spades')
+Card(rank='3', suit='clubs')
+Card(rank='3', suit='diamonds')
+Card(rank='3', suit='hearts')
+Card(rank='3', suit='spades')
+...
+Card(rank='A', suit='clubs')
+Card(rank='A', suit='diamonds')
+Card(rank='A', suit='hearts')
+Card(rank='A', suit='spades')
+```
+
