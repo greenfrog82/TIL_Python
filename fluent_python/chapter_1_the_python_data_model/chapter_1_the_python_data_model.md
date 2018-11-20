@@ -184,14 +184,8 @@ FrenchDeck는 `__len__`과 `__getitem__`을 구현 함으로써, 마치 파이�
 
 대개, `special method`의 호출은 암묵적이다. 예를들어, `for in x:`표현식은 사실 `iter(x)`를 호출하고 이는 결국 가능하면 `x.__iter__()`를 호출한다. 
 
-**CHECK** 
-다음 내용에서 `metaprogramming` 관련된 내용 이해 안됨. 
-
 보통, `special method`를 직접 호출하는 경우는 가급적 없어야한다. `metaprogramming`을 많이 하지 않는 한, 명시적으로 호출하는 것보다 더 많이 `special method`를 구현해야한다.  
 사용자의 코드에서 빈번하게 직접호출되는 유일한 `special method`는 `__init__`이다. 이 메소드는 사용자 정의 클래스의 `__init__` 메소드의 구현부에서 부모 클래스의 `__init__`을 호출할 때 명시적으로 호출된다.  
-
-**CHECK**
-앞서 `special method`를 사용하면, 이에 상응하는 built-in 함수를 호출하는것이 좋다고 했는데 built-in 타입을 사용할 때는 PyVarObject의 ob_size 와 같은 필드값을 사용하니 빠르다는건 알겠는데 `special method`는 결국 메소드를 호출해야하는데 다시 built-in 함수를 통해 호출해서 쓰라는 이야가 뭐지? 일관성때문에? 성능의 손해를 봐가면서?
 
 만약 `special method`를 호출해야한다면, 일반적으로 `special method`를 호출해주는 `built-in function`을 사용하는것이 좋다. 이러한 `built-in function`들은 이에 상응하는 `special method`를 호출할 뿐만아니라, 서비스들도 제공하고 built-in type의 경우 `special method`를 콜하는 것보다 빠르다.  
 
