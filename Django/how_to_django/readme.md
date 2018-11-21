@@ -9,6 +9,7 @@ Django 2.x를 다루는 방법에 대해서 정리한다.
 ## [Models](https://docs.djangoproject.com/en/2.1/topics/db/models/#proxy-models)
 
 * [DateTimeField](./datetimefield.md)
+* [NullBooleanField](./nullbooleanfield.md)
 * [Proxy](./proxy.md)
 
 ## QuerySet
