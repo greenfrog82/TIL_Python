@@ -37,7 +37,7 @@ lambda 표현식은 다음과 같다.
 
 >r = map(func, seq)
 
-### Parameter
+### Parameter(s)
 
 * **func** : `seq` 파라메터로 전달 된 `sequence`의 요소에 적용하고자 하는 로직을 포함하고 있는 함수이다. 
 * **seq** : `map`을 통해 생성하고자는 새로운 `list`에 소스가 되는 `sequence`객체.  
@@ -79,17 +79,42 @@ TypeError: <lambda>() takes 1 positional argument but 2 were given
 [3, 5]
 ```
 
+## Filtering
 
+`filter`함수는 기존에 존재하는 `sequence`의 요소들 중에서 특정 조건에 맞는 요소들로 이루어진 `list`객체를 생성한다.  
 
+>r = filter(func, seq)
 
+### Parameter(s)
 
+* **func** : 필터링을 위한 로직을 포함하고 있는 함수
+* **seq** : `filter`를 통해 생성하고자는 새로운 `list`에 소스가 되는 `sequence`객체.  
 
+### Example
 
+```python
+>>> list(filter(lambda x: 0==x%2, range(10)))
+[0, 2, 4, 6, 8]
+```
 
+## Reducing a List
 
+`reduce`함수는 `sequence`의 요소들을 순차적으로 함수에 전달해서 하나의 값을 반환한다. 
 
+>r = reduce(func, seq)
 
+### Parameter(s)
 
+* **func** : `sequence`의 요소들에 순차적으로 적용하고자하는 로직을 포함하고 있는 함수. 함수의 첫번째 인자로 로직이 적용된 값과 두번째 인자로 `sequence`의 요소가 전달된다.  
+* **seq** : `reduce`를 통해 반환하고자 하는 값의 소스가 되는 `sequence`객체.  
+
+### Example
+
+```python
+>>> import functools
+>>> functools.reduce(lambda res, x: res+x, range(1,6))
+15
+```
 
 ## Reference
 
