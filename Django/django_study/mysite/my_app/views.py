@@ -1,3 +1,9 @@
-from django.shortcuts import render
+from django.http import JsonResponse
+from django.urls import reverse
 
-# Create your views here.
+
+def get_url(request):
+    return JsonResponse({
+        'result':'success',
+        'url': reverse('my-app:get-url'),   
+    })

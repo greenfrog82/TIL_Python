@@ -159,3 +159,27 @@ urlpatterns = [
 
 ## 8.4 Use URL Namespaces
 
+`URL Namespace`은 어플리케이션 레벨과 인스턴스 레벨의 네임스페이스를 구분하기위해 사용된다. `URL Namespace`는 별 도움이 될것같지 않지만, 일단 사용해본 개발자들은 왜 미리 이 기능을 사용하지 않았을까하고 되물을 정도로 유용하다. `URL Namesapce`의 용법을 요약하면 다음과 같다.  
+
+>tastings_detail과 같은 URL 이름을 사용하지 말고, tastings:detail을 사용해라.   
+
+`Django 2.1`에서는 책에서와 같이 `include`함수에 `namespace`keyword argument를 전달하면 다음과 같은 에러가 발생한다.   
+
+```bash
+  File "/Users/a201808045/github/TIL_Python/Django/django_study/mysite/mysite/urls.py", line 21, in <module>
+    path('myapp/', include('my_app.urls', namespace='old')),
+  File "/Users/a201808045/.virtualenv/django/lib/python3.7/site-packages/django/urls/conf.py", line 39, in include
+    'Specifying a namespace in include() without providing an app_name '
+django.core.exceptions.ImproperlyConfigured: Specifying a namespace in include() without providing an app_name is not supported. Set the app_name attribute in the included module, or pass a 2-tuple containing the list of patterns and app_name instead.
+```
+
+이게 `Django 2.1`에서 `include`함수의 signiture가 변경되어 그렇다. 다음은 `Django 2.1`에서의 `include`함수의 signiture이다.  
+
+[include](https://docs.djangoproject.com/en/2.1/ref/urls/#include)
+```python
+include(module, namespace=None)
+include(pattern_list)
+include((pattern_list, app_namespace), namespace=None)
+```
+
+
