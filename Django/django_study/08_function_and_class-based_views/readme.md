@@ -163,7 +163,16 @@ urlpatterns = [
 
 >tastings_detail과 같은 URL 이름을 사용하지 말고, tastings:detail을 사용해라.   
 
-`Django 2.1`에서는 책에서와 같이 `include`함수에 `namespace`keyword argument를 전달하면 다음과 같은 에러가 발생한다.   
+`Django 2.1`에서는 책에서와 같이 `include`함수에 `namespace`keyword argument를 전달해보자. 
+
+```python
+urlpatterns = [
+    path('admin/', admin.site.urls),
+    path('my-app/', include('my_app.urls', namespace='my-app')), 
+]
+```
+
+다음과 같은 에러가 발생한다.   
 
 ```bash
   File "/Users/a201808045/github/TIL_Python/Django/django_study/mysite/mysite/urls.py", line 21, in <module>
@@ -173,7 +182,7 @@ urlpatterns = [
 django.core.exceptions.ImproperlyConfigured: Specifying a namespace in include() without providing an app_name is not supported. Set the app_name attribute in the included module, or pass a 2-tuple containing the list of patterns and app_name instead.
 ```
 
-이게 `Django 2.1`에서 `include`함수의 signiture가 변경되어 그렇다. 다음은 `Django 2.1`에서의 `include`함수의 signiture이다.  
+원인은 `Django 2.1`에서 `include`함수의 signiture가 변경되어 그렇다. 다음은 `Django 2.1`에서의 `include`함수의 signiture이다.  
 
 [include](https://docs.djangoproject.com/en/2.1/ref/urls/#include)
 ```python
@@ -182,4 +191,108 @@ include(pattern_list)
 include((pattern_list, app_namespace), namespace=None)
 ```
 
+`Django 2.1`의 `include`함수의 signiture로 옳바르게 수정하면, 다음과 같다. 
+
+```python
+urlpatterns = [
+    path('admin/', admin.site.urls),
+    path('my-app/', include(('my_app.urls', 'my-app'), namespace='my-app')),
+]
+```
+
+`URL Namespace`의 사용방법을 익혔으니, 이제 이것이 왜 유용한지 알아보자. 
+
+### 8.4.1 Makes for Shorter, More Obvious and Don't Repeat Yourself URL Names
+
+앞서 책의 예제에서는 'tastings_detail'과 'tastings_results'와 같이 모델 또는 앱 이름을 prefix로 사용하는 URL이름을 사용하지 않았다. 대신에 'detail'과 'results'와 같이 간단명료한 이름을 사용하였다. 이것은 가독성을 매우 좋게한다. 특히 Django 초보자들에게 더 그렇다. (아마도 tastings_라는 prefix를 붙이는 이유를 고민해야할테니까 ..)
+
+또한, 누가 'tastings'던 무엇이 되었던간에 URL의 이름을 작성할 때 이러한 prefix를 매번 코딩하길 원하는 개발자가 누가있겠는가? 
+
+### 8.4.2 Increases Interporability With Third-Party Libraries
+
+\<myapp\>_detail과 같은 URL이름을 사용하는 경우 발생하는 문제 중 하나는 앱 이름이 충돌되는 경우이다. 물론 자신이 작성하는 앱의 이름이 충돌되는 경우는 없을것이다. 하지만 Third-Party 앱을 사용하는데, 공교롭게도 이름이 갖다고 가정하자. 이런 경우, `URL Namesapce`를 사용하면 문제를 쉽게 해결할 수 있다.  
+
+**CHECK**
+
+앱 이름이 겹치는 경우에 대한 예제를 작성하지 못하겠다. 어떻게 작성하지?
+
+### 8.4.4. Allow for More App and Template Reverse Tricks
+
+`URL Namespace`을 사용하는 몇몇 트릭들이 존재하지만, 대부분의 경우 이것을 사용해야하는 정당한 이유가 없기 때문에 이 책에서는 이를 소개하지 않는다. 사실, 이러한 트릭을 사용하는것은 실질적인 이득은 없고 프로젝트를 더 복잡하게 만든다. 그러나 다음 두가지 경우에 있어서는 유용하다. 
+
+1. django-debug-toolbar와 같이 개발툴에서 디버깅 목적으로 서비스를 모니터링하고자 하는 경우.
+2. 사용자가 'modules'을 추가하고 바꿔서 사용자별 동작을 달리하고자 할 경우. (마치 플러그인 처럼?)
+
+개발자들은 이러한 창의적인 `URL Namesapce` 트릭의 사용을 정당화하지만, 늘 그렇듯이 가장 단순한 방법부터 시도해보아라. 
+
+**CHECK**
+
+혹시 1, 2이 어떻게 동작하는지 알고있는 분?
+
+## 8.5 Don't Reference Views as Strings in URLConfs
+
+Django 1.8의 튜토리얼이 배포되기 전 버전의 튜토리얼들에서 종종 urls.py 모듈에 view를 맵핑할 때 문자열을 사용하는 경우가 종종 보인다. 
+
+>참고로, 아래 예제는 책에 나오는 예제로 Django 1.10버전에서부터 `patterns`라는 함수가 사라졌다.
+
+```python
+urlpatterns = patterns('', 
+    url(r'^$', 'polls.views.index', name='index'),
+)
+```
+
+위와같이 view를 맵핑할 때 문자열을 사용하는 방법은 다음 두가지 문제를 가지고 있다. 
+
+1. Django는 마법과같이 view를 추가한다. 이러한 경우 view에 에러가 있다면 디버깅하기가 어렵다.
+2. Django의 숙련자는 Django 초보자에게 `urlpatterns`변수가 왜 필요한지 설명해야한다.  
+
+**CHECK**
+
+위 내용이 공감이 가는가? 실제 우리 코드도 위와같이 많이 쓰고 있음.  
+
+따라서, 다음과 같이 작성하는것이 옳은 방법이다.  
+
+```python
+from django.conf.urls import url
+from . import views
+
+urlpatterns = [
+    url(r'^$', views.index, name='index'),
+]
+```
+
+위 anti-pattern을 `Django 2.1`에서 재현해보자. 
+
+```python
+from django.urls import path
+
+from . import views
+
+urlpatterns = [
+    # path(r'get-url/', views.get_url, name='get-url'),
+    path(r'get-url/', 'my_app.views.get_url', name='get-url'),
+]
+```
+
+Django의 runserver command를 실행해보면 다음과 같은 에러가 발생한다.   
+따라서, `Django 2.1`을 사용하는 경우 위와 같은 문제를 겪지 않을것이므로 참고만하자. 
+
+```bash
+File "/Users/a201808045/.pyenv/versions/3.7.0/lib/python3.7/importlib/__init__.py", line 127, in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+  File "<frozen importlib._bootstrap>", line 1006, in _gcd_import
+  File "<frozen importlib._bootstrap>", line 983, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 967, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 677, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 728, in exec_module
+  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
+  File "/Users/a201808045/github/TIL_Python/Django/django_study/mysite/mysite/urls.py", line 19, in <module>
+    from my_app import urls
+  File "/Users/a201808045/github/TIL_Python/Django/django_study/mysite/my_app/urls.py", line 7, in <module>
+    path(r'get-url/', 'my_app.views.get_url', name='get-url'),
+  File "/Users/a201808045/.virtualenv/django/lib/python3.7/site-packages/django/urls/conf.py", line 73, in _path
+    raise TypeError('view must be a callable or a list/tuple in the case of include().')
+TypeError: view must be a callable or a list/tuple in the case of include().
+    path('my-app/', urls),
+```
 
