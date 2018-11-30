@@ -81,7 +81,7 @@ from tastings.models import Tasting
 
 위와 같이 논의가 되었지만 아직도 납득이 되지 않는다. 하지만 Django와 이 책 그리고 스터디 참여인원들의 생각이 하나이므로 따르는것이 좋겠다.  
 
-## 8.3 Stick to Losse Coupling in URLConfs
+## 8.3 Stick to Lose Coupling in URLConfs
 
 여기서는 앞서 언급했던 URLconf와 view가 타이트하게 결합되는 문제를 회피하는 방법에 대해서 알아보자.   
 
@@ -295,4 +295,116 @@ File "/Users/a201808045/.pyenv/versions/3.7.0/lib/python3.7/importlib/__init__.p
 TypeError: view must be a callable or a list/tuple in the case of include().
     path('my-app/', urls),
 ```
+
+## 8.6 Try to Keep business Logic Out of Views
+
+과거에 많은 양의 복잡한 비즈니스로직을 view에 작성하였다. 때문에 새로운 변경사항이 추가 될 경우 이를 적용하기가 어려웠다.   
+
+이러한 이유로 모델, 모델 메니저의 메소드 또는 일반화 된 헬퍼 함수에 이러한 로직을 넣는 방식을 추천한다. 비즈니스로직이 재활용하기 쉬운 콤포넌트에 작성되어 있을 때, 이 콤포넌트를 view에서 호출하면 되고 이를 통해 좀 더 유연한 서비스를 개발할 수 있다.  
+
+하지만 이러한 접근방식이 프로젝트가 시작되는 시점에서는 언제나 가능한것이 아니기 때문에, 경험에 비추어 중복되는 비즈니스 로직이을 발견하면 이를 view 밖으로 이동시키자.  
+
+## 8.7 Django Views Are Functions
+
+모든 Django view는 함수이다. 이 함수는 HTTP request object를 전달받아서 HTTP response object를 반환한다.  
+
+```python
+HttpResponse = view(HttpRequest)
+HttpResponse = View.as_view(HttpRequest)
+```
+
+함수로서 클라이언트의 요청을 전달받아서 응답하는 개념은 Djang의 view(FBVs or CBVs)를 통해 할 수 있는 모든 것들에 대한 기초가 된다.
+
+>#### TIP: Class-Based Views Are Actually Called as Functions
+>
+>Django의 `CBV`는 `FBV`와 작성하는 방법이 극명하게 다르지만, `URLConf`에서 호출되는 `View.as_view()`는 `CBV`에서 `inner view`함수를 반환한다. 
+
+### 8.7.1 The Simplest Views
+
+앞서 이야기한것들을 염두해두고 장고로 만들 수 있는 가장 간단한 view를 기억해두는것은 아주 중요하다. 
+
+```python
+from django.http import HttpResponse
+from django.views.generic import View
+
+# The simplest FBV
+def simplest_view(request):
+    # Business logic goes here
+    return HttpRespnose('FBV')
+
+# The simplest CBV
+class SimplestView(View):
+    def get(self, request, *args, **kwargs):
+        # Business logic goes here
+        return HttpResponse('CBV')
+```
+
+그럼 왜 장고로 만들 수 있는 가장 간단한 view의 형태를 기억해두는 것이 유용할까?
+
+* 때때로 간단한 일을 하는 일회성 view가 필요하다. 
+* Django view의 형태가 간단하다는것을 이해한다는 것은, 실제 해당 view의 비즈니스 로직을 이해하는데 도움이된다.
+* Django의 `FBV`가 HTTP method 중립적이라는것을 알 수 있고, `CBV`는 특정 HTTP method의 선언을 요구한다는 것을 알 수 있다. 
+
+## 8.8 Don't Use locals() as Views Context
+
+일단 `locals()`이 뭔지 알아보면, 다음 글을 보자.
+
+>A symbol table is a data structure maintained by a compiler which contains all necessary information about the program.   
+>These include variable names, methods, classes, etc.
+
+파이썬은 `Global Symbol Table`과 `Local Symbol Table`을 관리하는데 `locals()`은 이름을 보면 알겠지만 `Local Symbol Table`의 정보를 반환한다. 
+
+간단히 사용 예제를 보자. 
+
+```python
+>>> def perform(request):
+...     name = 'greenfrog'
+...     print(locals())
+
+>>> perform(None)
+{'request': None, 'name': 'greenfrog'}
+```
+
+위 코드를 보면, `view`에서 응답을 줄 때 `locals()`함수를 호출하면 context를 구구절절히 작성하지 않고 쉽게 전달할 수 있을 것처럼 보인다. 하지만 이는 Django의 **anti-pattern**중 하나이다.   
+
+다음 코드를 보자. 
+
+```python
+def ice_cream_store_display(request, store_id):
+    store = get_object_or_404(Store, id=store_id)
+    date = timezone.now()
+    return render(request, 'melted_ice_cream_report.html', locals())
+```
+
+언뜻 아무문제 없어보인다.   
+
+하지만, 명시적인 context 전달방식에서 암시적인 conext 전달방식을 선택한 덕분에 이렇게 간단한 view의 유지보수가 힘들어진다. 특히 view가 어떤 conext를 리턴하기로 되어있는지 알기가 어렵다. 만약 어떤 지역변수의 이름을 변경하게 된다면 어떤 conext를 리턴하게 될지 즉각적으로 알기가 어렵다.   
+
+```python
+def ice_cream_store_display(request, store_id):
+    store = get_object_or_404(Store, id=store_id)
+    now = timezone.now()
+    return render(request, 'melted_ice_cream_report.html', locals())
+```
+
+예를들어, 위 두 코드에서의 차이점을 발견하는데 얼마나 걸렸는가? 이건 간단한 예제지마냐 좀 더 복잡한 코드였다면 ... 
+따라서 다음과 같이 context를 명시적으로 전달하도록 하자.   
+
+```python
+def ice_cream_store_display(request, store_id):
+    return render(request, 'melted_ice_cream_report.html', {
+        'store': get_object_or_404(Store, id=store_id),
+        'now': timezone.now(),
+    })
+```
+
+## 8.9 Summary
+
+이번장에서는 언제 `FBV` 또는 `CBV`를 사용해야하는지에 대해서 논의하였다. 간단히 요약하면 가급적 `CBV`를 사용하고 여의치 않을 경우 `FBV`를 사용하자고했다.   
+또한 `View`의 로직을 `URLConf`와 분리하는 것에 대해서 이야기하였다.  
+
+다음장에서는 `FBV`를 활용하는 방법에 대해서 좀 더 깊게 다루고 그 다음장에서는 'CBV'에 대해서 좀 더 깊게 다룰 것이다.  
+
+
+
 
