@@ -16,6 +16,7 @@ Django 2.x를 다루는 방법에 대해서 정리한다.
 
 * [Operators that return new QuerySets](./operator_with_queryset.md)
 * [Update()](./queryset_update.md)
+* [exists()](./qeuryset_exists.md)
 * [bulk_create()](./bulk_create.md)
 
 ## Transaction
