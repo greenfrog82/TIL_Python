@@ -41,6 +41,141 @@ tuple, str 그리고 bytes는 이를 구성하고 있는 아이템을 변경할 
 
 ### LISTCOMPS NO LONGER LEAK THEIR VARIABLES
 
+`Python 2.x`에서 `listcomp`을 사용할 때 `listcomp`의 scope안에 있는 변수명과 밖에있는 변수명이 동일할 경우 scope 밖에있는 변수의 값이 `listcomp`에 의해 변경되는 문제가 있었다.  
+
+```python
+Python 2.7.10 (default, Aug 17 2018, 17:41:52)
+Type "copyright", "credits" or "license" for more information.
+
+IPython 5.8.0 -- An enhanced Interactive Python.
+?         -> Introduction and overview of IPython's features.
+%quickref -> Quick reference.
+help      -> Python's own help system.
+object?   -> Details about 'object', use 'object??' for extra details.
+
+In [1]: x = 'test'
+
+In [2]: [x for x in range(10)]
+Out[2]: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+
+In [3]: x
+Out[3]: 9
+```
+
+하지만, `Python 3.x`에서 `listcomp`, `generator`, `setcomp` 그리고 `diccomp`의 경우 자신의 **local scope**를 가지고 있기 때문에 이와같은 문제가 발생하지 않는다.  
+
+```python
+Python 3.7.0 (default, Oct 12 2018, 10:00:43)
+Type 'copyright', 'credits' or 'license' for more information
+IPython 7.0.1 -- An enhanced Interactive Python. Type '?' for help.
+
+In [1]: x = 'test'
+
+In [2]: [x for x in range(10)]
+Out[2]: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+
+In [3]: x
+Out[3]: 'test'
+```
+
+`Python 2.x`와 `Python 3.x`에서 `generator`, `setcomp` 그리고 `diccomp` 각각 앞서 설명한대로 동작하는지 확인해보자.  
+
+#### Python 2.7.10
+
+앞서 `Python 2.7.10`에서 `listcomp`를 사용할 때, `listcomp` 바깥 scope 변수의 값을 `listcomp`에서 변경하는것을 확인하였다. 하지만, `generator`, `setcomp` 그리고 `diccomp`에서는 전혀 다르게 동작하는 것을 확인할 수 있다. 앞서 `Python 3.x`에서 설명했던 `generator`, `setcomp` 그리고 `diccomp`와 동일하게 동작함을 알 수 있다. 
+
+```python
+In [25]: list(x for x in xrange(10))
+Out[25]: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+
+In [26]: x
+Out[26]: 'test'
+
+In [27]: x = 'test'
+
+In [28]: {x for x in xrange(10)}
+Out[28]: {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+
+In [29]: x
+Out[29]: 'tet'
+
+In [32]: {x:'value' for x in xrange(10)}
+Out[32]:
+{0: 'value',
+ 1: 'value',
+ 2: 'value',
+ 3: 'value',
+ 4: 'value',
+ 5: 'value',
+ 6: 'value',
+ 7: 'value',
+ 8: 'value',
+ 9: 'value'}
+
+In [33]: x
+Out[33]: 'test'
+```
+
+#### Python 3.7.0
+
+앞서 `Python 2.7.10`에서와 완전히 동일한 결과를 보여준다. 
+
+```python
+In [1]: x = 'test'
+
+In [2]: list(x for x in range(10))
+Out[2]: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+
+In [3]: x
+Out[3]: 'test'
+
+In [4]: {x for x in range(10)}
+Out[4]: {0, 1, 2, 3, 4, 5, 6, 7, 8, 9}
+
+In [5]: x
+Out[5]: 'test'
+
+In [6]: {x:'value' for x in range(10)}
+Out[6]:
+{0: 'value',
+ 1: 'value',
+ 2: 'value',
+ 3: 'value',
+ 4: 'value',
+ 5: 'value',
+ 6: 'value',
+ 7: 'value',
+ 8: 'value',
+ 9: 'value'}
+
+In [7]: x
+Out[7]: 'test'
+```
+
+마지막으로, `for loop`의 경우는 어떻게 동작할까? 이 경우는 Python의 버전과는 무관하며 지역변수이기 때문에 `for loop`에서 사용하는 변수와 동일한 변수명이 존재한다면 해당 변수의 값이 `for loop`에 의해 변경된다.
+
+다음 예제를 보면 `Python 2.x`와 `Python 3.x`가 동일한 결과를 출력하고 있음을 알 수 있다.
+
+```python
+# Python 2.7.10
+In [4]: x = 'test'
+
+In [5]: for x in range(10):
+   ...:     x
+   ...:
+
+In [6]: x
+Out[6]: 9
+
+# Python 3.7.0
+In [5]: x = 'test'
+
+In [6]: for x in range(10):
+   ...:     x
+
+In [7]: x
+Out[7]: 9
+```
 
 ## Slicing
 
@@ -194,17 +329,6 @@ can only assign an iterable
 >>> l
 [0, 1, 2, 3, 4, 5, 6, 7, 100, 200, 300, 400]
 ```
-**CHECK**
-
-그럼 한가지 궁금해지는것이 앞서 `iterable 객체`를 사용하라고 헀는데 `list`로 `tuple`을 전달하면 어떻게 될까? 앞서 작성한 예제를 활용해서 확인해보자.   
-출력결과를 보면 앞서와 다르다. 이건 왜 그럴까? 
-**아마도 이렇게 사용할 수 없나보다. 결국 list끼리만 사용가능한건가?**
-
-```python
->>> l[2:5] = 100,
->>> l
-[0, 1, 100]
-```
 
 ## Using + and * with Sequences
 
@@ -277,7 +401,7 @@ can only concatenate tuple (not "list") to tuple
 'abcdefabcdefabcdefabcdefabcdef'
 ```
 
-### Building Lists Lists
+### Building Lists of Lists
 
 여기서는 `*`연산자로 `list of lists`를 초기화할 때 발생할 수 있는 문제에 대해서 다룬다. 
 
@@ -338,3 +462,4 @@ can only concatenate tuple (not "list") to tuple
 >>> board
 [['_', '_', '_'], ['_', '_', '_'], ['_', 'X', '_']]
 ```
+
