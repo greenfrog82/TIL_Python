@@ -8,12 +8,12 @@
 
 #### string
 
-`string`파라메터로 전달 된 `special character`들을 `%xx`escape 문자로 치환한다. 알파벳, 숫자 그리고 '_.-'문자들은 치환되지 않는다.  
+`string`파라메터로 전달 된 `special character`들을 `%xx`escape 문자로 치환한다. **알파벳, 숫자 그리고 '_.-'문자들**은 치환되지 않는다.  
 
 #### safe (option)
 
 `safe`파라메터는 옵션으로, 특정 캐릭터를 치환하지 않는다.  
-기본값은 '/'이다.  
+**기본값은 '/'**이다.  
 
 ### Example
 
@@ -39,4 +39,4 @@ quote('/~connolly/') yields '/%7econnolly/'.
 
 # Reference
 
-* [urllib](https://docs.python.org/2/library/urllib.html)
+* [urllib 2.7.15](https://docs.python.org/2/library/urllib.html)
