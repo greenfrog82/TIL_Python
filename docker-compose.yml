@@ -19,3 +19,15 @@ services:
     image: memcached:latest
     ports:
       - "11211:11211"
+  db:
+    container_name: greenfrog-postresql-how-to-django
+    image: postgres
+    restart: always
+    ports:
+      - 5432:5432
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 8080:8080
+
