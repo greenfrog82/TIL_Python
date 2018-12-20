@@ -1,9 +1,50 @@
-# How to connect postgresql
+# How to connect PostgreSQL
+
+>* macOS Mojave version 10.14.2
+>* Python 3.7.0
+>* Django 2.1
+>* Docker Desktop Version 2.0.0.0-mac81 (29211)
+>* PostgreSQL
+
+본 문서에서는 `Django 2.1`에 `Docker`를 통해 실행시킨 `PostgreSQL`을 연동하는 방법에 대해서 설명한다.
+
+## Adding PostgreSQL to services of docker-composer
+
+`PostgreSQL`을 `docker-composer`의 서비스에 등록하자.  
+`adminer`의 경우 PHP로 개발되어 웹으로 서비스되는 데이터베이스 관리 툴이다. 
+
+```yaml
+version: '3'
+services:
+    db:
+        container_name: greenfrog-postresql-how-to-django
+        image: postgres
+        restart: always
+        ports:
+        - 5432:5432
+    adminer:
+        image: adminer
+        restart: always
+        ports:
+        - 8080:8080
+```
+
+다음 명령을 통해 `docker-compose`를 실행시키자.   
+
+```sh
+$ docker-compose up -d
+```
+
+이제 웹 브라이우저를 통해 `adminer`에 접속하여 `http://localhost:8080`로 접속해서 아이디/패스워드를 넣으면 `docker-compose`를 통해 실행 된 `PostgreSQL`에 접근할 수 있다. 기본 아이디/패스워드는 `postgres/postgres`이다.  
+
+## Set up PostgreSQL in Django
+
+`settings.py`파일을 열어서 `DATABASES`속성을 다음과 같이 수정하자. 
 
 ```python
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql',
+        'ENGINE': 'django.db.backends.PostgreSQL',
         'NAME': 'postgres',
         'USER': 'postgres',
         'PASSWORD': 'postgres',
@@ -13,61 +54,30 @@ DATABASES = {
 }
 ```
 
+## Migrating DB
+
+이제 데이터베이스를 변경했으니, 기존 데이터베이스를 마이그레이션하도록 하자.  
+이를 위해 다음과 같이 명령을 수행하면, 에러가 발생한다.  
 
 ```sh
-./manage.py migrate
+$ ./manage.py migrate
 Traceback (most recent call last):
-  File "/Users/greenfrog/.virtualenvs/django/lib/python3.7/site-packages/django/db/backends/postgresql/base.py", line 20, in <module>
+  File "/Users/greenfrog/.virtualenvs/django/lib/python3.7/site-packages/django/db/backends/PostgreSQL/base.py", line 20, in <module>
     import psycopg2 as Database
 ModuleNotFoundError: No module named 'psycopg2'
-
-During handling of the above exception, another exception occurred:
-
-Traceback (most recent call last):
-  File "./manage.py", line 15, in <module>
-    execute_from_command_line(sys.argv)
-  File "/Users/greenfrog/.virtualenvs/django/lib/python3.7/site-packages/django/core/management/__init__.py", line 381, in execute_from_command_line
-    utility.execute()
-  File "/Users/greenfrog/.virtualenvs/django/lib/python3.7/site-packages/django/core/management/__init__.py", line 357, in execute
-    django.setup()
-  File "/Users/greenfrog/.virtualenvs/django/lib/python3.7/site-packages/django/__init__.py", line 24, in setup
-    apps.populate(settings.INSTALLED_APPS)
-  File "/Users/greenfrog/.virtualenvs/django/lib/python3.7/site-packages/django/apps/registry.py", line 112, in populate
-    app_config.import_models()
-  File "/Users/greenfrog/.virtualenvs/django/lib/python3.7/site-packages/django/apps/config.py", line 198, in import_models
-    self.models_module = import_module(models_module_name)
-  File "/Users/greenfrog/.pyenv/versions/3.7.0/lib/python3.7/importlib/__init__.py", line 127, in import_module
-    return _bootstrap._gcd_import(name[level:], package, level)
-  File "<frozen importlib._bootstrap>", line 1006, in _gcd_import
-  File "<frozen importlib._bootstrap>", line 983, in _find_and_load
-  File "<frozen importlib._bootstrap>", line 967, in _find_and_load_unlocked
-  File "<frozen importlib._bootstrap>", line 677, in _load_unlocked
-  File "<frozen importlib._bootstrap_external>", line 728, in exec_module
-  File "<frozen importlib._bootstrap>", line 219, in _call_with_frames_removed
-  File "/Users/greenfrog/.virtualenvs/django/lib/python3.7/site-packages/django/contrib/auth/models.py", line 2, in <module>
-    from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
-  File "/Users/greenfrog/.virtualenvs/django/lib/python3.7/site-packages/django/contrib/auth/base_user.py", line 47, in <module>
-    class AbstractBaseUser(models.Model):
-  File "/Users/greenfrog/.virtualenvs/django/lib/python3.7/site-packages/django/db/models/base.py", line 101, in __new__
-    new_class.add_to_class('_meta', Options(meta, app_label))
-  File "/Users/greenfrog/.virtualenvs/django/lib/python3.7/site-packages/django/db/models/base.py", line 304, in add_to_class
-    value.contribute_to_class(cls, name)
-  File "/Users/greenfrog/.virtualenvs/django/lib/python3.7/site-packages/django/db/models/options.py", line 203, in contribute_to_class
-    self.db_table = truncate_name(self.db_table, connection.ops.max_name_length())
-  File "/Users/greenfrog/.virtualenvs/django/lib/python3.7/site-packages/django/db/__init__.py", line 33, in __getattr__
-    return getattr(connections[DEFAULT_DB_ALIAS], item)
-  File "/Users/greenfrog/.virtualenvs/django/lib/python3.7/site-packages/django/db/utils.py", line 202, in __getitem__
-    backend = load_backend(db['ENGINE'])
-  File "/Users/greenfrog/.virtualenvs/django/lib/python3.7/site-packages/django/db/utils.py", line 110, in load_backend
-    return import_module('%s.base' % backend_name)
-  File "/Users/greenfrog/.pyenv/versions/3.7.0/lib/python3.7/importlib/__init__.py", line 127, in import_module
-    return _bootstrap._gcd_import(name[level:], package, level)
-  File "/Users/greenfrog/.virtualenvs/django/lib/python3.7/site-packages/django/db/backends/postgresql/base.py", line 24, in <module>
-    raise ImproperlyConfigured("Error loading psycopg2 module: %s" % e)
 ```
 
+위 에러는 `psycopg2`모듈이 설치되어 있지 않아서 발생한 문제이다. `psycopg2`는 `Python`에서 `PostgreSQL`을 사용하기 위한 `DataBase Adapter`로 이 모듈이다. 때문에 해당 모듈이 없다면, `Django`는 `PostgreSQL`를 통해 어떠한 작업도 할 수 없다.  
+다음 명령을 통해 `psycopg2`를 설치하자.  
+
 ```sh
-./manage.py migrate
+$ pip install psycopg2
+```
+
+이제 다시 마이그레이션을 수행해보자. 마이그레이션이 정상적으로 수행되는것을 확인 할 수 있다. 
+
+```sh
+$ ./manage.py migrate
 /Users/greenfrog/.virtualenvs/django/lib/python3.7/site-packages/psycopg2/__init__.py:144: UserWarning: The psycopg2 wheel package will be renamed from release 2.8; in order to keep installing from binary please use "pip install psycopg2-binary" instead. For details see: <http://initd.org/psycopg/docs/install.html#binary-install-from-pypi>.
   """)
 Operations to perform:
@@ -94,3 +104,12 @@ Running migrations:
   Applying auth.0009_alter_user_last_name_max_length... OK
   Applying sessions.0001_initial... OK
 ```
+
+그런데 마이그레이션 과정에서 다음과 같이 경고 메시지가 출력되었다. 이건 뭘까?
+
+>Psycopg is the most popular PostgreSQL adapter for the Python programming language. At its core it fully implements the Python DB API 2.0 specifications. Several extensions allow access to many of the features offered by PostgreSQL.
+
+# Reference
+
+* [DockerHub - postgres](https://hub.docker.com/_/postgres)
+* [psycopg](http://initd.org/psycopg/)
