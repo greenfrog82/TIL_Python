@@ -2,6 +2,10 @@
 
 Django 2.x를 다루는 방법에 대해서 정리한다. 
 
+## [django-admin and manage.py](https://docs.djangoproject.com/en/2.1/ref/django-admin/#django-admin-and-manage-py)
+
+* [dbshell](./dbshell_command.md)
+
 ## [Using the Django authentication system](https://docs.djangoproject.com/en/2.1/topics/auth/default/)
 
 * [User](./user.md)
