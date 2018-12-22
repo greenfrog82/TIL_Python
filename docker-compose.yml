@@ -23,6 +23,8 @@ services:
     container_name: greenfrog-postresql-how-to-django
     image: postgres
     restart: always
+    volumes:
+      - ./Django/how_to_django/mysite_data:/var/lib/postgresql/data
     ports:
       - 5432:5432
   adminer:

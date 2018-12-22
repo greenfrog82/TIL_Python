@@ -1,4 +1,4 @@
-# How to connect PostgreSQL
+# How to connect PostgreSQL with Docker
 
 >* macOS Mojave version 10.14.2
 >* Python 3.7.0
@@ -241,8 +241,104 @@ postgres=# \d+
 postgres=#
 ```
 
+## Where to store data
+
+앞선과정을 통해서 `Docker`에 `PostgreSQL`을 올려서 Django와 연동을 해두었지만, 데이터가 `Docker Container`내부에 있기 때문에 `Docker`를 삭제하고 나면 데이터가 유지되지 않는다. 따라서 데이터를 유지하기 위해서는 호스트 PC와 `volume`으로 연결해주어야한다.  
+
+이를위해 우선 `docker-compose.yml`파일을 열어서 `volume`설정을 해주도록 하자. `PostgreSQL`은 `PGDATA`환경변수를 통해 경로를 지정해주지 않으면 기본적으로 `/var/lib/postgresql/data`에 데이터 저장한다. 따라서 호스트 PC의 적당한 위치와 `/var/lib/postgresql/data`를 `volume`으로 묶어주자. 
+
+```yaml
+version: '3'
+services:
+    db:
+        container_name: greenfrog-postresql-how-to-django
+        image: postgres
+        restart: always
+        volumes: 
+            - /var/lib/postgresql/data
+        ports:
+            - 5432:5432
+    adminer:
+        image: adminer
+        restart: always
+        ports:
+            - 8080:8080
+```
+
+이제 기존`Docker Container`를 삭제한 후 다시 실행해주자.  
+
+```sh
+$ docker-compose stop -t 0
+Stopping greenfrog-postresql-how-to-django ... done
+Stopping til_python_adminer_1              ... done
+Stopping greenfrog-rabbitmq                ... done
+Stopping greenfrog-redis                   ... done
+Stopping greenfrog-memcached               ... done
+$
+$ docker-compose rm
+Going to remove greenfrog-postresql-how-to-django, til_python_adminer_1, greenfrog-rabbitmq, greenfrog-redis, greenfrog-memcached
+Are you sure? [yN] y
+Removing greenfrog-postresql-how-to-django ... done
+Removing til_python_adminer_1              ... done
+Removing greenfrog-rabbitmq                ... done
+Removing greenfrog-redis                   ... done
+Removing greenfrog-memcached               ... done
+$
+$ docker-compose up -d
+Creating greenfrog-memcached               ... done
+Creating til_python_adminer_1              ... done
+Creating greenfrog-postresql-how-to-django ... done
+Creating greenfrog-redis                   ... done
+Creating greenfrog-rabbitmq                ... done
+```
+
+`Docker Container`를 삭제한 후 다시 실행했기 때문에 앞서 `migrate`했던 데이터들은 모두 삭제되었을것이다. 이를 확인해보자.  
+
+```sh
+./manage.py dbshell
+psql (11.1)
+Type "help" for help.
+
+postgres=# \d
+Did not find any relations.
+postgres=# \d+
+Did not find any relations.
+```
+
+앞서 `migrate`했던 데이터들이 모두 삭제된것을 확인할 수 있다. 다시 한번 `migreate`명령을 수행해주자.  
+
+```sh
+./manage.py migrate
+Operations to perform:
+  Apply all migrations: admin, app_model, auth, contenttypes, sessions
+Running migrations:
+  Applying contenttypes.0001_initial... OK
+  Applying auth.0001_initial... OK
+  Applying admin.0001_initial... OK
+  Applying admin.0002_logentry_remove_auto_add... OK
+  Applying admin.0003_logentry_add_action_flag_choices... OK
+  Applying app_model.0001_initial... OK
+  Applying app_model.0002_person_try_to_travel... OK
+  Applying app_model.0003_compareperson... OK
+  Applying app_model.0004_auto_20181121_0313... OK
+  Applying app_model.0005_auto_20181121_0316... OK
+  Applying contenttypes.0002_remove_content_type_name... OK
+  Applying auth.0002_alter_permission_name_max_length... OK
+  Applying auth.0003_alter_user_email_max_length... OK
+  Applying auth.0004_alter_user_username_opts... OK
+  Applying auth.0005_alter_user_last_login_null... OK
+  Applying auth.0006_require_contenttypes_0002... OK
+  Applying auth.0007_alter_validators_add_error_messages... OK
+  Applying auth.0008_alter_user_username_max_length... OK
+  Applying auth.0009_alter_user_last_name_max_length... OK
+  Applying sessions.0001_initial... OK
+```
+
+이제 다시 `Docker Container`를 삭제했다 다시 올리더라도 데이터가 유지되는것을 확인 할 수 있다. 
+
 # Reference
 
 * [DockerHub - postgres](https://hub.docker.com/_/postgres)
 * [psycopg](http://initd.org/psycopg/)
 * [dbshell](https://docs.djangoproject.com/en/2.1/ref/django-admin/#dbshell)
+* [How to interact with your project’s database](https://docs.divio.com/en/latest/how-to/interact-database.html)

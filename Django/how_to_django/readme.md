@@ -10,6 +10,10 @@ Django 2.x를 다루는 방법에 대해서 정리한다.
 
 * [User](./user.md)
 
+## [Migrations](https://docs.djangoproject.com/en/2.1/topics/migrations/)
+
+* [How to connect PostgreSQL with Docker](./connection_postgresql.md)
+
 ## [Models](https://docs.djangoproject.com/en/2.1/topics/db/models/#proxy-models)
 
 * [DateTimeField](./datetimefield.md)
