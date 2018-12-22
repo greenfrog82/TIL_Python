@@ -105,11 +105,144 @@ Running migrations:
   Applying sessions.0001_initial... OK
 ```
 
-그런데 마이그레이션 과정에서 다음과 같이 경고 메시지가 출력되었다. 이건 뭘까?
+그런데 마이그레이션 과정에서 다음과 같이 경고 메시지가 출력되었다. 이건 뭘까?  
 
->Psycopg is the most popular PostgreSQL adapter for the Python programming language. At its core it fully implements the Python DB API 2.0 specifications. Several extensions allow access to many of the features offered by PostgreSQL.
+>/Users/greenfrog/.virtualenvs/django/lib/python3.7/site-packages/psycopg2/__init__.py:144: UserWarning: The psycopg2 wheel package will be renamed from release 2.8; in order to keep installing from binary please use "pip install psycopg2-binary" instead. For details see: \<http://initd.org/psycopg/docs/install.html#binary-install-from-pypi\>.
+
+`psycopg2`를 사용하면 설치를 위해 소스코드를 빌드해야하고 또 이 빌드를 위해 필요로하는 것들이 있는데 더 이상 이러한 방법을 사용하지 말고 `wheel package`형태로 제공되는 psycopg2-binary`를 사용하라는 것이다. 따라서, 앞서 설치했던 `psycopg2`를 삭제하고 `psycopg2-binary`를 설치하도록 하자.  
+
+```sh
+$ pip uninstall psycopg2
+Uninstalling psycopg2-2.7.6.1:
+  Would remove:
+    /Users/greenfrog/.virtualenvs/django/lib/python3.7/site-packages/psycopg2-2.7.6.1.dist-info/*
+    /Users/greenfrog/.virtualenvs/django/lib/python3.7/site-packages/psycopg2/*
+Proceed (y/n)? y
+  Successfully uninstalled psycopg2-2.7.6.1
+$ pip install psycopg2-binary
+Collecting psycopg2-binary
+  Using cached https://files.pythonhosted.org/packages/fe/df/933e81c7fa95a915a9d67bd5736963a99513568f82cfc937c76d0d6f3414/psycopg2_binary-2.7.6.1-cp37-cp37m-macosx_10_6_intel.macosx_10_9_intel.macosx_10_9_x86_64.macosx_10_10_intel.macosx_10_10_x86_64.whl
+Installing collected packages: psycopg2-binary
+Successfully installed psycopg2-binary-2.7.6.1
+```
+
+## How to interact with PostgreSQL on Docker
+
+### Usign Docker
+
+`Docker`를 통해 띄어놓은 `PostgreSQL`에 접속하기 위해서는 다음 명령을 사용하면 된다.  
+
+>$ docker exec -it \<container name\> psql -U \<psql user name\>
+
+그럼 현재 실행중인 `Docker`에 띄어놓은 `PostgreSQL`에 접속해보자.  
+
+```sh
+docker ps
+CONTAINER ID        IMAGE                 COMMAND                  CREATED             STATUS              PORTS                                                                                        NAMES
+d14102035ae6        adminer               "entrypoint.sh docke…"   4 days ago          Up 4 days           0.0.0.0:8080->8080/tcp                                                                       til_python_adminer_1
+602f294aaff9        postgres              "docker-entrypoint.s…"   5 days ago          Up 4 days           0.0.0.0:5432->5432/tcp                                                                       greenfrog-postresql-how-to-django
+779538d46e70        rabbitmq:management   "docker-entrypoint.s…"   5 days ago          Up 4 days           4369/tcp, 5671/tcp, 0.0.0.0:5672->5672/tcp, 15671/tcp, 25672/tcp, 0.0.0.0:15672->15672/tcp   greenfrog-rabbitmq
+234aed277e9a        redis:latest          "docker-entrypoint.s…"   5 days ago          Up 4 days           0.0.0.0:6379->6379/tcp                                                                       greenfrog-redis
+bf57a246b77f        memcached:latest      "docker-entrypoint.s…"   5 days ago          Up 4 days           0.0.0.0:11211->11211/tcp                                                                     greenfrog-memcached
+$
+$ docker exec -it 602f294aaff9 psql -U postgres psql (11.1 (Debian 11.1-1.pgdg90+1))
+Type "help" for help.
+
+postgres=# \d+
+                                      List of relations
+ Schema |               Name                |   Type   |  Owner   |    Size    | Description
+--------+-----------------------------------+----------+----------+------------+-------------
+ public | app_model_article                 | table    | postgres | 8192 bytes |
+ public | app_model_article_id_seq          | sequence | postgres | 8192 bytes |
+ public | app_model_person                  | table    | postgres | 0 bytes    |
+ public | app_model_person_id_seq           | sequence | postgres | 8192 bytes |
+ public | app_model_point                   | table    | postgres | 0 bytes    |
+ public | app_model_point_id_seq            | sequence | postgres | 8192 bytes |
+ public | app_model_userprofile             | table    | postgres | 0 bytes    |
+ public | app_model_userprofile_id_seq      | sequence | postgres | 8192 bytes |
+ public | auth_group                        | table    | postgres | 0 bytes    |
+ public | auth_group_id_seq                 | sequence | postgres | 8192 bytes |
+ public | auth_group_permissions            | table    | postgres | 0 bytes    |
+ public | auth_group_permissions_id_seq     | sequence | postgres | 8192 bytes |
+ public | auth_permission                   | table    | postgres | 8192 bytes |
+ public | auth_permission_id_seq            | sequence | postgres | 8192 bytes |
+ public | auth_user                         | table    | postgres | 8192 bytes |
+ public | auth_user_groups                  | table    | postgres | 0 bytes    |
+ public | auth_user_groups_id_seq           | sequence | postgres | 8192 bytes |
+ public | auth_user_id_seq                  | sequence | postgres | 8192 bytes |
+ public | auth_user_user_permissions        | table    | postgres | 0 bytes    |
+ public | auth_user_user_permissions_id_seq | sequence | postgres | 8192 bytes |
+ public | django_admin_log                  | table    | postgres | 8192 bytes |
+ public | django_admin_log_id_seq           | sequence | postgres | 8192 bytes |
+ public | django_content_type               | table    | postgres | 8192 bytes |
+ public | django_content_type_id_seq        | sequence | postgres | 8192 bytes |
+ public | django_migrations                 | table    | postgres | 16 kB      |
+ public | django_migrations_id_seq          | sequence | postgres | 8192 bytes |
+ public | django_session                    | table    | postgres | 8192 bytes |
+(27 rows)
+
+postgres=#
+```
+
+### Using dbshell
+
+Django는 `DATABASES`설정에 연결된 데이터베이스에 접근하기 위한 툴로 `dbshell`이라는 command를 제공한다. 이에 대한 자세한 내용은 다음 링크를 참고하도록 하자.  
+
+[Django - dbshell command](https://github.com/greenfrog82/TIL_Python/blob/master/Django/how_to_django/dbshell_command.md)
+
+위 문서를 읽어보면, 일단 `PostgreSQL`에서 `dbshell command`를 사용하려면 로컬에 `psql`이 설치되어 있어야한다. 결국 `PostgreSQL`을 로컬에 설치하기 싫어서 `Docker`에 올린건데;; 이거 참 ...
+
+일단 다음과 같이 로컬에 `PostgreSQL`을 설치하자. 
+
+```sh
+$ brew install postgresql
+```
+
+`PostgreSQL` 설치가 완료됐으면 `dbshell command`를 통해 `Docker`를 통해 올려놓은 `PostgreSQL`에 접속해보자.  
+
+```sh
+./manage.py dbshell
+psql (11.1)
+Type "help" for help.
+
+postgres=# \d+
+                                      List of relations
+ Schema |               Name                |   Type   |  Owner   |    Size    | Description
+--------+-----------------------------------+----------+----------+------------+-------------
+ public | app_model_article                 | table    | postgres | 8192 bytes |
+ public | app_model_article_id_seq          | sequence | postgres | 8192 bytes |
+ public | app_model_person                  | table    | postgres | 0 bytes    |
+ public | app_model_person_id_seq           | sequence | postgres | 8192 bytes |
+ public | app_model_point                   | table    | postgres | 0 bytes    |
+ public | app_model_point_id_seq            | sequence | postgres | 8192 bytes |
+ public | app_model_userprofile             | table    | postgres | 0 bytes    |
+ public | app_model_userprofile_id_seq      | sequence | postgres | 8192 bytes |
+ public | auth_group                        | table    | postgres | 0 bytes    |
+ public | auth_group_id_seq                 | sequence | postgres | 8192 bytes |
+ public | auth_group_permissions            | table    | postgres | 0 bytes    |
+ public | auth_group_permissions_id_seq     | sequence | postgres | 8192 bytes |
+ public | auth_permission                   | table    | postgres | 8192 bytes |
+ public | auth_permission_id_seq            | sequence | postgres | 8192 bytes |
+ public | auth_user                         | table    | postgres | 8192 bytes |
+ public | auth_user_groups                  | table    | postgres | 0 bytes    |
+ public | auth_user_groups_id_seq           | sequence | postgres | 8192 bytes |
+ public | auth_user_id_seq                  | sequence | postgres | 8192 bytes |
+ public | auth_user_user_permissions        | table    | postgres | 0 bytes    |
+ public | auth_user_user_permissions_id_seq | sequence | postgres | 8192 bytes |
+ public | django_admin_log                  | table    | postgres | 8192 bytes |
+ public | django_admin_log_id_seq           | sequence | postgres | 8192 bytes |
+ public | django_content_type               | table    | postgres | 8192 bytes |
+ public | django_content_type_id_seq        | sequence | postgres | 8192 bytes |
+ public | django_migrations                 | table    | postgres | 16 kB      |
+ public | django_migrations_id_seq          | sequence | postgres | 8192 bytes |
+ public | django_session                    | table    | postgres | 8192 bytes |
+(27 rows)
+
+postgres=#
+```
 
 # Reference
 
 * [DockerHub - postgres](https://hub.docker.com/_/postgres)
 * [psycopg](http://initd.org/psycopg/)
+* [dbshell](https://docs.djangoproject.com/en/2.1/ref/django-admin/#dbshell)
