@@ -27,16 +27,14 @@ auto_now의 값이 True로 설정되어 있다고 해당 필드의 값을 수정
 
 ## auto_now_add
 
-auto_now_add의 값이 True인 경우, 모델이 **최초로 저장**될 때 현재시간을 필드의 값으로 저장한다. 따라서, '최초 생성시간'을 기록하기 위해서 유용하게 사용할 수 있다.  
-비록 해당 값을 설정했더라도 모델이 생성된 때 사용자가 설정한 값은 무시되고 현재시간을 필드의 값으로 저장한다.  
+`auto_now_add`의 값이 True인 경우, 모델이 **최초로 저장**될 때 현재시간을 필드의 값으로 저장한다. 따라서, '최초 생성시간'을 기록하기 위해서 유용하게 사용할 수 있다.  
 
-? 다음 내용은 예제를 만들어 보았지만 어떤 의미인지 알 수가 없다. `auto_now_add`를 설정하더라 해당 필드의 값을 수정할 수 있기 때문에 그런 의미는 아닌것 같고 앞서 설명과 같이 해당 필드의 값을 설정했을 때 모델이 생성될 때 사용자의 설정한 값이 무시되는 것을 막는 것인줄 알았는데 그게 아니었다;;
-```
-만약 해당 필드의 값을 수정하고 싶다면 `auto_now_add=True`를 설정하는 대신, 
+`auto_now_add`의 동작이 좀 재미있는 부분이 있는데 모델을 생성할 때, 해당 속성이 들어간 필드의 값을 설정해줬다고 하더라도 `save()`함수를 호출하는 시점에 해당 시간으로 바뀐다는 것이다.  
+만약, 해당 속성이 들어간 필드의 값을 설정하여 저장을 하고 싶고 만약 필드값을 설정하지 않은 경우 `default`값이 필요하다고 하면 `auto_now_add`속성이 아닌 `default`속성을 사용하는것이 바람직하다.  
+`default`값을 설정할 때는 다음을 참고자하자. 
 
 * DateTimeField의 경우 `default=django.utils.timezone.now`를 설정하고, 
 * DateField의 경우 `default=django.date.today`를 설정하자.
-```
 
 **Note**
 
@@ -137,6 +135,33 @@ datetime.datetime(2018, 9, 27, 23, 59, 25, 318455, tzinfo=<UTC>)
 datetime.datetime(2018, 9, 27, 23, 59, 25, 318455, tzinfo=<UTC>)
 >>> obj.updated_date
 datetime.datetime(2018, 9, 27, 23, 59, 30, 418160, tzinfo=<UTC>)
+```
+
+이와같이 `auto_now_add` 속성을 사용하면 의도치 않은(?) 문제가 발생할 수 있으므로, 모델이 생성되는 시점에 날짜가 기록되야하는 경우가 아닌 겨우라면 `default`속성을 사용하라고 했었다.  
+이를 확인해보자. 우선 다음과 같은 모델이 있다고 가정하자.  
+
+```python
+from django.utils import timezone
+
+class DateTimeTestModel(models.Model):
+    started_at = models.DateTimeField(default=timezone.now)
+    ended_at = models.DateTimeField(null=True)
+```
+
+이제 앞선 예제와 같이 모델을 생성한 후 `started_at`속성에 날짜를 할당한 후 `save()`함수를 호출해보면, `auto_now_add`때와는 달리 달리 `started_at`속성에 할당해두었던 값이 저장된것을 알 수 있다. 
+
+```python
+>>> from django.utils import timezone
+>>> from datetime import timedelta
+>>> started_at = timezone.now() + timedelta(days=10)
+>>> started_at
+datetime.datetime(2019, 1, 20, 1, 7, 41, 595928, tzinfo=<UTC>)
+>>> tt = DateTimeTestModel()
+>>> tt.started_at = timezone.now() + timedelta(days=10)
+>>> tt.save()
+>>> dt = DateTimeTestModel.objects.first()
+>>> dt.started_at
+datetime.datetime(2019, 1, 20, 1, 7, 41, 595928, tzinfo=<UTC>)
 ```
 
 # Reference
