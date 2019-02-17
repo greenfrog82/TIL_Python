@@ -5,8 +5,15 @@ from django.contrib.auth.models import User
 from django.utils import timezone
 
 
+class AuthorManager(models.Manager):
+    def filter_start_a_names(self):
+        # return self.get_queryset().filter(name__startswith='a')
+        return self.filter(name__startswith='a')
+
+
 class Author(models.Model):
     name = models.CharField(max_length=100)
+    objects = AuthorManager()
     
 class Article(models.Model):
     content = models.TextField()
@@ -33,21 +40,39 @@ class UserProfile(models.Model):
         unique_together = ('user', 'platform', 'platform_id')
 
 
+class PersonQuerySet(models.QuerySet):
+    def authors(self):
+        return self.filter(role='A')
+
+    def editors(self):
+        return self.filter(role='E')
+
+class PersonManager(models.Manager):
+    def get_queryset(self):
+        return PersonQuerySet(self.model)
+
+    def authors(self):
+        return self.get_queryset().authors()
+
+    def editors(self):
+        return self.get_queryset().editors()
+
 class Person(models.Model):
-    first_name = models.CharField(max_length=30)
-    last_name = models.CharField(max_length=30)
-    try_to_travel = models.BooleanField(null=True)
+    name = models.CharField(max_length=100)
+    role = models.CharField(max_length=1)
+
+    objects = PersonManager()
 
 
-class MyPerson(Person):
-    class Meta:
-        proxy = True
+# class MyPerson(Person):
+#     class Meta:
+#         proxy = True
 
 
-class OrderedPerson(Person):
-    class Meta:
-        ordering = ['-last_name']
-        proxy = True
+# class OrderedPerson(Person):
+#     class Meta:
+#         ordering = ['-last_name']
+#         proxy = True
 
 
 class Group(models.Model):
@@ -80,7 +105,6 @@ class Manager(models.Model):
     
 
 class DateTimeTestModel(models.Model):
-    created_at_1 = models.DateTimeField(auto_now_add=True)
-    created_at_2 = models.DateTimeField(default=timezone.now)
-    created_at_3 = models.DateTimeField(default=datetime.now)
+    started_at = models.DateTimeField(default=timezone.now)
+    ended_at = models.DateTimeField(null=True)
 
