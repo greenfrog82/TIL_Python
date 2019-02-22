@@ -361,3 +361,50 @@ datid |  pid  | usename  | app  | waiting |        state        |               
 ```
 
 
+## Performance 
+
+트랜잭션을 지속적으로 열고 닫는것과 한번 열고 모든 작업을 마친 후 닫는것의 성능차이는 얼마나 있을까?
+
+### 한번만 열고 닫기
+
+```python
+@transaction.commit_manually
+def tx_commit_manually(request):
+    begin = time.time()
+
+    for i in range(1000):
+        User.objects.create(username='tx_test_user_{}'.format(i))
+
+    transaction.commit()
+
+    print("--- %s seconds ---" % (time.time() - begin))
+    return JSONResponse({'result': 'ok'}, status=httplib.OK)
+```
+
+위 결과는 다음과 같다.  
+
+```
+--- 7.35732483864 seconds ---
+```
+
+### 지속적으로 열고 닫기 
+
+```python
+@transaction.commit_manually
+def tx_commit_manually(request):
+    begin = time.time()
+
+    for i in range(1000):
+        User.objects.create(username='tx_test_user_again{}'.format(i))
+        transaction.commit()
+
+    print("--- %s seconds ---" % (time.time() - begin))
+    return JSONResponse({'result': 'ok'}, status=httplib.OK)
+```
+
+위 결과는 다음과 같다. 
+
+```
+--- 50.7602729797 seconds ---
+```
+
