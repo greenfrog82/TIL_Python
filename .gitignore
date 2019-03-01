@@ -17,5 +17,6 @@ __pycache__
 *.lock
 
 # postgresql data store
-mysite_data
+Django/how_to_django/mysite_data/*
+!Django/how_to_django/mysite_data/postgresql.conf
 
