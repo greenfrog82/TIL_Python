@@ -3,7 +3,7 @@ import threading
 
 from django.http import JsonResponse
 
-from app_model.models import Article
+# from app_model.models import Article
 from .tasks import create_random_user_accounts
 
 

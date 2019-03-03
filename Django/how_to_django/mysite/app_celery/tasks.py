@@ -4,7 +4,7 @@ from celery import shared_task
 from django.contrib.auth.models import User
 from django.utils.crypto import get_random_string
 
-from app_model.models import Article
+# from app_model.models import Article
 
 
 @shared_task
