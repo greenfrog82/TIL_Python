@@ -13,10 +13,14 @@ __pycache__
 # python
 *.pyc
 
-# etc
-*.lock
-
 # postgresql data store
 Django/how_to_django/mysite_data/*
 !Django/how_to_django/mysite_data/postgresql.conf
+
+# Django
+migrations
+
+# etc
+*.lock
+
 
