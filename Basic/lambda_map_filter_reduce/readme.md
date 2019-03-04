@@ -1,5 +1,7 @@
 # lambda, map, reduce and filter
 
+map, reduce 그리고 filter는 `Python 2`는 built-in 함수로 제공하지만, `Python 3`에서는 `functools`모듈로 옮겨졌다.  
+
 ## lambda
 
 `lambda`는 Functional Programming에 익숙한 개발자라면 누구나 알고있는 표현식이다.  
