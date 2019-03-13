@@ -22,3 +22,24 @@ class Product(models.Model):
 
     def __str__(self):
         return self.title
+
+
+class City(models.Model):
+    name = models.CharField(max_length=120)
+
+
+class Person(models.Model):
+    name = models.CharField(max_length=120)
+    hometown = models.ForeignKey(
+        City,
+        on_delete=models.SET_NULL,
+        blank=True,
+        null=True,
+    )
+
+
+class Book(models.Model):
+    name = models.CharField(max_length=120)
+    author = models.ForeignKey(
+        Person, 
+        on_delete=models.CASCADE)

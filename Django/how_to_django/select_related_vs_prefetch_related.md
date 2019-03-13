@@ -161,7 +161,7 @@ Out[14]:
 
 ## [select_related](https://docs.djangoproject.com/en/2.1/ref/models/querysets/#select-related)
 
-우선 `select_related`를 통해 **N+1 Query Problem**을 고쳐보자. 궁극적인 목표는 쿼리가 한번만 나가게하는 것이다.  
+우선 `select_related`를 통해 **N+1 Query Problem**을 고쳐보자. 궁극적인 목표는 쿼리를 한번만 나가게하는 것이다.  
 앞서 사용했던 `products_list`함수를 `select_related`를 통해 고친 다음 함수를 통해 문제를 해결해보자.
 
 ```python
@@ -234,7 +234,7 @@ FieldError: Invalid field name(s) given in select_related: 'product'. Choices ar
     #for product in Category.objects.first().product_set.select_related('product').all():
 ```
 
-이렇게 수정된 함수를 실행시키면, 역시 동일하게 `FieldErro`가 발생한다. 
+이렇게 수정된 함수를 실행시키면, 역시 동일하게 `FieldError`가 발생한다. 
 
 ```python
 FieldError: Invalid field name(s) given in select_related: 'product'. Choices are: (none)
