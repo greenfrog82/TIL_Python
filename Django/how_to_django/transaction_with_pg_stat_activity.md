@@ -64,6 +64,8 @@ def tx_autocommit(request):
     return JSONResponse({'result': 'ok'}, status=httplib.OK)
 ```
 
+**break point 1.**
+
 위를 실행하면 앞서와 같이 첫번쨰 브레이크 포인트에서 디비 연결을 하고 트랜잭션을 연 후 쿼리를 날리고 있음을 알 수 있다. 
 
 ```
@@ -82,6 +84,8 @@ datid |  pid  | usename  | app  | waiting |        state        |               
  16392 | 81912 | postgres | psql | f       | active              | select datid, pid, usename, application_name as app, waiting, state, query  from pg_stat_activity;
  16392 | 90834 | postgres |      | f       | idle in transaction | SELECT "auth_user"."id", "auth_user"."username", "auth_user"."first_name", "auth_user"."last_name", "auth_user"."email", "auth_user"."password", "auth_user"."is_staff", "auth_user"."is_active", "auth_user"."is_superuser", "auth_user"."last_login", "auth_user"."date_joined" FROM "auth_user" ORDER BY "auth_user"."id" DESC LIMIT 1
  ```
+
+**break point 2.**
 
  이제 다음 브레이크 포인트로 이동해서 사용자를 생성하고 저장해보자. 
  데이터 insert 쿼리를 날린 후 `COMMIT`을 하고 다시 트랜잭션을 연 후 `customer_userleavinginfo`테이블을 select한 후 다시 `COMMIT`을 하고 있음을 알 수 있다.
