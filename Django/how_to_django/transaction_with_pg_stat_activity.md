@@ -281,6 +281,49 @@ datid |  pid  | usename  | app  | waiting |        state        |               
 [2019-02-22 09:20:21.233 KST][97014][5c6f4029.17af6][0]LOG:  duration: 0.020 ms  statement: COMMIT
 ```
 
+### How does transaction work when commit perform after select query and save query perform?
+
+```python
+@transaction.commit_manually
+def tx_commit_manually(request):
+    user = User.objects.all()[10]
+    import ipdb; ipdb.set_trace() # break point 1.
+    transaction.commit()
+    user = User.objects.all()[11]
+    user.username = 'tx-test-6'
+    user.save()
+    ipdb.set_trace()              # break point 2.
+    transaction.commit()
+```
+
+**break point 1.**
+
+```sql
+[2019-03-15 23:40:59.087 KST][67646][5c8bb97b.1083e][0]LOG:  duration: 0.140 ms  statement: SHOW default_transaction_isolation
+[2019-03-15 23:40:59.088 KST][67646][5c8bb97b.1083e][0]LOG:  duration: 0.437 ms  statement: SET TIME ZONE 'Asia/Seoul'
+[2019-03-15 23:40:59.088 KST][67646][5c8bb97b.1083e][0]LOG:  duration: 0.030 ms  statement: BEGIN; SET TRANSACTION ISOLATION LEVEL READ COMMITTED
+[2019-03-15 23:40:59.089 KST][67646][5c8bb97b.1083e][0]LOG:  duration: 1.437 ms  statement: SELECT "auth_user"."id", "auth_user"."username", "auth_user"."first_name", "auth_user"."last_name", "auth_user"."email", "auth_user"."password", "auth_user"."is_staff", "auth_user"."is_active", "auth_user"."is_superuser", "auth_user"."last_login", "auth_user"."date_joined" FROM "auth_user" LIMIT 1 OFFSET 10
+```
+
+**break point 2.**
+
+```sql
+[2019-03-15 23:41:03.824 KST][67646][5c8bb97b.1083e][0]LOG:  duration: 0.045 ms  statement: COMMIT
+[2019-03-15 23:41:07.047 KST][67646][5c8bb97b.1083e][0]LOG:  duration: 0.043 ms  statement: BEGIN; SET TRANSACTION ISOLATION LEVEL READ COMMITTED
+[2019-03-15 23:41:07.048 KST][67646][5c8bb97b.1083e][0]LOG:  duration: 0.193 ms  statement: SELECT "auth_user"."id", "auth_user"."username", "auth_user"."first_name", "auth_user"."last_name", "auth_user"."email", "auth_user"."password", "auth_user"."is_staff", "auth_user"."is_active", "auth_user"."is_superuser", "auth_user"."last_login", "auth_user"."date_joined" FROM "auth_user" LIMIT 1 OFFSET 11
+[2019-03-15 23:41:17.245 KST][67646][5c8bb97b.1083e][0]LOG:  duration: 1.287 ms  statement: SELECT (1) AS "a" FROM "auth_user" WHERE "auth_user"."id" = 95378  LIMIT 1
+[2019-03-15 23:41:17.251 KST][67646][5c8bb97b.1083e][456308]LOG:  duration: 2.375 ms  statement: UPDATE "auth_user" SET "username" = 'tx-test-6', "first_name" = '', "last_name" = '', "email" = 'haunter.poliwag@dev.null', "password" = 'sha1$zptElQq5jkPI$f2db6c66eaa0afaca1cf6f8f3ddc20e87675c172', "is_staff" = false, "is_active" = true, "is_superuser" = false, "last_login" = '2013-09-22 21:48:47.748010', "date_joined" = '2013-08-02 22:19:38.650860' WHERE "auth_user"."id" = 95378
+[2019-03-15 23:41:17.273 KST][67646][5c8bb97b.1083e][456308]LOG:  duration: 2.313 ms  statement: SELECT "customer_userleavinginfo"."user_id", "customer_userleavinginfo"."is_deleted", "customer_userleavinginfo"."left_at", "customer_userleavinginfo"."reason", "customer_userleavinginfo"."is_dormant_user" FROM "customer_userleavinginfo" WHERE "customer_userleavinginfo"."user_id" = 95378
+```
+
+**break point 3.**
+
+```sql
+[2019-03-15 23:57:17.936 KST][68721][5c8bbc9a.10c71][0]LOG:  duration: 0.400 ms  statement: COMMIT
+[2019-03-15 23:57:30.514 KST][68721][5c8bbc9a.10c71][0]LOG:  duration: 0.035 ms  statement: BEGIN; SET TRANSACTION ISOLATION LEVEL READ COMMITTED
+[2019-03-15 23:57:30.514 KST][68721][5c8bbc9a.10c71][0]LOG:  duration: 0.019 ms  statement: COMMIT
+```
+
 ### How does transaction work transaction where query execute outside of commit_manually context manager?
 
 ```python
