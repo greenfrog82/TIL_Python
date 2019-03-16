@@ -68,7 +68,7 @@ def viewfunc(request):
 #### Per-Code-Block
 
 코드 블록 레벨의 트랜잭션은 `context manager`를 통해 처리 할 수 있다. 
-다음 코드의 경우 `context manager`로 감싸진 부분은 정상적으로 코드가 실행 되면 `commit`이 이루어지고 exception이 발생한 경우 `rollback`된다. 그리고 `context manager`이외의 코드에서는 Django의 기본 트랜잭션 처리(AUTOCOMMIT)이 이루어진다. 
+다음 코드의 경우 `context manager`로 감싸진 부분은 정상적으로 코드가 실행 되면 `commit`이 이루어지고 exception이 발생한 경우 `rollback`된다. 그리고 `context manager`이외의 코드에서는 Django의 기본 트랜잭션 처리(AUTOCOMMIT)가 이루어진다. 
 
 ```python
 from django.db import transaction
@@ -171,7 +171,12 @@ class Command(BaseCommand):
 Is AUTOCOMMIT Mode managed? False
 Is autocommit managed? False
 ```
-    
+
+위 결과를 보면 다음과 같다. 
+
+* **is_managed()가 True인 경우**는 `commit_on_success`와 `commit_manually`와 같이 INSERT/UPDATE/DELETE 쿼리가 발생헀을 때 바로 `COMMIT`을 수행하지 않고 명시적 또는 암시적 `COMMIT`수행을 해야하고 `ROLLBACK`이 가능한 트랜잭션이다. 
+* **is_managed()가 False인 경우**는 `AUTOCOMMIT`모드로 INSERT?UPDATE/DELETE 쿼리 발생 시 바로 `COMMIT`을 수행하고 명시적 또는 암시적 `ROLLBACK`이 불가능한 트랜잭션이다. 
+
 >**Noete**
 Django에서 트랜잭션을 다루기 위한 `per-function`과 `per-code-block`방식의 `view`, `function`, `method` 어디에서든 사용가능하다.
 
@@ -275,7 +280,7 @@ class Command(BaseCommand):
         transaction.rollback()
 ```
 
-이 경우 다음과 같이 `rollback`이 이루어진다.   
+이 경우 다음과 같이 `rollback`이 이루어진다.
 
 ```python
 >>> Person.objects.all()
@@ -409,6 +414,104 @@ class Command(BaseCommand):
             transaction.rollback()
         else:
             transaction.commit()
+```
+
+### commit_on_success vs commit_manually
+
+사실 `commit_on_success`의 코드를 보면 다음과 같은데, context manager로 코드가 진입할 때 트랜잭션을 열고 context manager를 코드가 빠져나갈때 INSERT/UPDATE/DELETE 쿼리 존재여부를 확인해서 자동으로 `COMMIT`을 실행하거나 `ROLLBACK`을 해주는 역할을 해줄 뿐이지 `commit_manually`의 구현체와 동일하다. 또한 코드 내부에서 호출되고 있는 `rollback`, `commit`함수들은 `django.db.transaction`모듈에 있는 것들이다.   
+
+```python
+def commit_on_success(using=None):
+    """
+    This decorator activates commit on response. This way, if the view function
+    runs successfully, a commit is made; if the viewfunc produces an exception,
+    a rollback is made. This is one of the most common ways to do transaction
+    control in Web apps.
+    """
+    def entering(using):
+        enter_transaction_management(using=using)
+        managed(True, using=using)
+
+    def exiting(exc_value, using):
+        try:
+            if exc_value is not None:
+                if is_dirty(using=using):
+                    rollback(using=using)
+            else:
+                if is_dirty(using=using):
+                    try:
+                        commit(using=using)
+                    except:
+                        rollback(using=using)
+                        raise
+        finally:
+            leave_transaction_management(using=using)
+
+    return _transaction_func(entering, exiting, using)
+
+def commit_manually(using=None):
+    """
+    Decorator that activates manual transaction control. It just disables
+    automatic transaction control and doesn't do any commit/rollback of its
+    own -- it's up to the user to call the commit and rollback functions
+    themselves.
+    """
+    def entering(using):
+        enter_transaction_management(using=using)
+        managed(True, using=using)
+
+    def exiting(exc_value, using):
+        leave_transaction_management(using=using)
+
+    return _transaction_func(entering, exiting, using)
+```
+
+무슨말이 하고 싶은거냐면, 데이터베이스의 트랜잭션이 `commit_on_success`용 따로 `commit_manually`용이 따로 있는것이 아니기 때문에 결국 `Managed Transaction`을 사용하는 두 함수들내부에서는 얼마든지 `django.db.transaction`모듈의 `rollback`과 `commit`함수를 얼마든지 사용할 수 있다. 사실 처음에 두 함수들을 공부했을 때 `rollback`과 `commit`함수는 `commit_manually`에서만 사용하는 줄 알았다.  
+
+다만 앞서 `commit_on_success`의 구현을 보면 알곘지만, `rollback`과 `commit`을 암시적으로하고 있기 때문에 명시적으로 이들의 호출이 필요한 경우가 아니라면 굳이 호출해 줄 필요가 없고 그런 경우라면 차라리 `commit_manually`를 사용하는것이 혼란이 없을 것 같다. 
+
+이쯤에서 하나 궁금해지는건 `commit_on_success`는 `rollback`과 `commit`을 수행하기 위해 별도의 검사를 수행하기 때문에 개발자가 직접 `rollback`과 `commit`을 수행하는 `commit_manually`보다 미세하게 나마 성능에 차이가 있지 않을까? 확인해보자. 
+
+```python
+import time
+
+from django.core.management.base import BaseCommand
+from django.db import transaction
+from dowant.test_transaction.models import Person
+
+# 1. commit_on_success
+class Command(BaseCommand):
+    def handle(self, *args, **options):
+        begin = time.time()
+        exec_cnt = 100
+
+        for idx in range(exec_cnt):
+            with transaction.commit_on_success():
+                Person.objects.create(name='commit_on_success_{}'.format(idx))
+
+        self.stdout.write('--- {} seconds\n'.format((time.time() - begin) / exec_cnt))
+
+# 2. commit_manually
+class Command(BaseCommand):
+    def handle(self, *args, **options):
+        begin = time.time()
+        exec_cnt = 100
+
+        for idx in range(exec_cnt):
+            with transaction.commit_manually():
+                Person.objects.create(name='commit_manually_{}'.format(idx))
+                transaction.commit()
+
+        self.stdout.write('--- {} seconds\n'.format((time.time() - begin) / exec_cnt))
+```
+
+각각 두 Django Custom Command의 실행 결과는 다음과 같고, 별 차이가 없다. 
+
+```
+# 1. commit_on_success
+--- 0.000612988471985 seconds%                                                            
+# 2. commit_manually
+--- 0.000596458911896 seconds
 ```
 
 ## SavePoints
