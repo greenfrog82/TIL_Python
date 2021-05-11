@@ -185,7 +185,67 @@ End decorator_2
 End decorator_1
 ```
 
+## 여러 데코레이터 연결하기
+
+앞서 생성한 `decorator_1`과 `decorator_2`와 데코레이터를 연결해서 사용하는 데코레이터를 만들어보자. 
+
+```python
+from functools import wraps
+
+
+def decorator_1(func):
+    @wraps(func)
+    def wrapper_1(*args, **kwargs):
+        print('Begin decorator_1')
+        func(*args, **kwargs)
+        print('End decorator_1')
+        return 1
+    return wrapper_1
+
+def decorator_2(func):
+    @wraps(func)
+    def wrapper_2(*args, **kwargs):
+        print('Begin decorator_2')
+        func(*args, **kwargs)
+        print('End decorator_2')
+        return 2
+    return wrapper_2
+
+
+def composed(*desc):
+    def wrapper(func):
+        f = func
+        for d in desc:
+            f = d(f)
+        return f
+    return wrapper
+    
+
+@composed(decorator_2, decorator_1)
+def test():
+    """This is test function."""
+    print('I am test function of python.')
+
+
+print(test.__doc__)
+print()
+test()
+```
+
+위 예제의 실행결과는 다음과 같이 `test`함수의 주석도 정상적으로 출력되고, 각 데코레이터의 출력도 정상적으로 이루어짐을 알 수 있다.
+
+```
+This is test function.
+
+Begin decorator_1
+Begin decorator_2
+I am test function of python.
+End decorator_2
+End decorator_1
+```
+
 ## 참조
 
 * [Primer on Python Decorators](https://realpython.com/blog/python/primer-on-python-decorators/)
 * [What does functools.wraps do?](http://stackoverflow.com/questions/308999/what-does-functools-wraps-do)
+* [Can I combine two decorators into a single one in Python?](https://stackoverflow.com/questions/5409450/can-i-combine-two-decorators-into-a-single-one-in-python)
