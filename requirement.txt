@@ -4,7 +4,7 @@ backcall==0.1.0
 billiard==3.5.0.4
 blessings==1.7
 bpython==0.17.1
-celery==4.2.1
+celery==5.2.2
 certifi==2018.10.15
 chardet==3.0.4
 Click==7.0
